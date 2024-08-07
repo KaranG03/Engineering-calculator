@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maxima Calculator</title>
+    <script>
+        // Function to safely evaluate mathematical expressions
+        function evaluateFunction(funcStr, x) {
+            try {
+                const func = new Function('x', `return ${funcStr};`);
+                return func(x);
+            } catch (e) {
+                throw new Error('Invalid function');
+            }
+        }
+
+        // Numerical differentiation function
+        function differentiate(f, x, h = 1e-5) {
+            return (f(x + h) - f(x - h)) / (2 * h);
+        }
+
+        // Function to find local maxima using gradient ascent
+        function findLocalMaxima(f, xStart, learningRate = 0.01, tolerance = 1e-5, maxIterations = 1000) {
+            let x = xStart;
+            let iteration = 0;
+            let prevValue = -Infinity;
+            let value = f(x);
+
+            while (iteration < maxIterations && Math.abs(value - prevValue) > tolerance) {
+                prevValue = value;
+                x += learningRate * differentiate(f, x);
+                value = f(x);
+                iteration++;
+            }
+
+            return x;
+        }
+
+        // Function to find global maxima using a simple grid search
+        function findGlobalMaxima(f, xMin, xMax, stepSize = 0.1) {
+            let maxX = xMin;
+            let maxValue = -Infinity;
+
+            for (let x = xMin; x <= xMax; x += stepSize) {
+                const value = f(x);
+                if (value > maxValue) {
+                    maxValue = value;
+                    maxX = x;
+                }
+            }
+
+            return { x: maxX, value: maxValue };
+        }
+
+        // Function to handle the form submission
+        function calculateMaxima(event) {
+            event.preventDefault();
+
+            const funcInput = document.getElementById('function').value;
+            const xStart = parseFloat(document.getElementById('x-start').value);
+            const xMin = parseFloat(document.getElementById('x-min').value);
+            const xMax = parseFloat(document.getElementById('x-max').value);
+            
+            try {
+                const f = (x) => evaluateFunction(funcInput, x);
+
+                const localMax = findLocalMaxima(f, xStart);
+                const globalMax = findGlobalMaxima(f, xMin, xMax);
+
+                document.getElementById('result').innerText = `
+                    Local maximum near x = ${localMax} with value f(x) = ${f(localMax)}
+                    Global maximum in range x = [${xMin}, ${xMax}] is at x = ${globalMax.x} with value f(x) = ${globalMax.value}
+                `;
+            } catch (e) {
+                document.getElementById('result').innerText = 'Error: Invalid function or input';
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Maxima Calculator</h1>
+    <form onsubmit="calculateMaxima(event)">
+        <label for="function">Function (in terms of x, e.g., Math.sin(x), Math.exp(x), x*x):</label><br>
+        <input type="text" id="function" name="function" required><br><br>
+
+        <label for="x-start">Starting point for local maxima search:</label><br>
+        <input type="number" id="x-start" name="x-start" step="any" required><br><br>
+
+        <label for="x-min">Minimum x-value for global maxima search:</label><br>
+        <input type="number" id="x-min" name="x-min" step="any" required><br><br>
+
+        <label for="x-max">Maximum x-value for global maxima search:</label><br>
+        <input type="number" id="x-max" name="x-max" step="any" required><br><br>
+
+        <input type="submit" value="Calculate Maxima">
+    </form>
+    
+    <h2 id="result"></h2>
+</body>
+</html>

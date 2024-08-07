@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Derivative Calculator</title>
+    <script>
+        // Function to safely evaluate mathematical expressions
+        function evaluateFunction(funcStr, x) {
+            // Using a function constructor to evaluate the mathematical expression
+            try {
+                const func = new Function('x', `return ${funcStr};`);
+                return func(x);
+            } catch (e) {
+                throw new Error('Invalid function');
+            }
+        }
+
+        // Numerical differentiation function
+        function differentiate(f, x, h = 1e-5) {
+            return (f(x + h) - f(x - h)) / (2 * h);
+        }
+
+        // Function to handle the form submission
+        function calculateDerivative(event) {
+            event.preventDefault();
+
+            // Get the function and x value from the form
+            const funcInput = document.getElementById('function').value;
+            const x = parseFloat(document.getElementById('x-value').value);
+            
+            try {
+                // Parse the input function
+                const f = (x) => evaluateFunction(funcInput, x);
+                const derivativeAtX = differentiate(f, x);
+                
+                // Display the result
+                document.getElementById('result').innerText = `The derivative of f(x) at x = ${x} is approximately ${derivativeAtX}`;
+            } catch (e) {
+                document.getElementById('result').innerText = 'Error: Invalid function or input';
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Derivative Calculator</h1>
+    <form onsubmit="calculateDerivative(event)">
+        <label for="function">Function (in terms of x, e.g., Math.sin(x), Math.exp(x), x*x):</label><br>
+        <input type="text" id="function" name="function" required><br><br>
+        
+        <label for="x-value">Point at which to evaluate the derivative:</label><br>
+        <input type="number" id="x-value" name="x-value" step="any" required><br><br>
+        
+        <input type="submit" value="Calculate Derivative">
+    </form>
+    
+    <h2 id="result"></h2>
+</body>
+</html>

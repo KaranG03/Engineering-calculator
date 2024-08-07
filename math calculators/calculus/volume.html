@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volume of Solid of Revolution Calculator</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script>
+        // Function to safely evaluate mathematical expressions
+        function evaluateFunction(funcStr, x) {
+            try {
+                const func = new Function('x', `return ${funcStr};`);
+                return func(x);
+            } catch (e) {
+                throw new Error('Invalid function');
+            }
+        }
+
+        // Numerical integration using the disk method
+        function integrate(f, a, b, n = 1000) {
+            const h = (b - a) / n;
+            let integral = 0;
+
+            for (let i = 0; i < n; i++) {
+                const x = a + i * h;
+                const y = evaluateFunction(f, x);
+                integral += Math.PI * y * y * h;
+            }
+
+            return integral;
+        }
+
+        // Function to generate data points for plotting
+        function generatePlotData(funcStr, a, b, numPoints = 100) {
+            const x = [];
+            const y = [];
+            const xPlot = [];
+            const yPlot = [];
+
+            const h = (b - a) / numPoints;
+            for (let i = 0; i <= numPoints; i++) {
+                const xi = a + i * h;
+                x.push(xi);
+                y.push(evaluateFunction(funcStr, xi));
+                xPlot.push(xi);
+                yPlot.push(evaluateFunction(funcStr, xi));
+            }
+
+            return { x, y, xPlot, yPlot };
+        }
+
+        // Function to handle the form submission
+        function calculateVolume(event) {
+            event.preventDefault();
+
+            const func = document.getElementById('function').value;
+            const a = parseFloat(document.getElementById('a-value').value);
+            const b = parseFloat(document.getElementById('b-value').value);
+
+            try {
+                const volume = integrate(func, a, b);
+                document.getElementById('result').innerText = `The volume of the solid of revolution around the x-axis from x = ${a} to x = ${b} is approximately ${volume}`;
+
+                // Plotting
+                const plotData = generatePlotData(func, a, b);
+
+                const trace1 = {
+                    x: plotData.x,
+                    y: plotData.y,
+                    mode: 'lines',
+                    name: 'Function',
+                    line: { color: 'blue' }
+                };
+
+                const trace2 = {
+                    x: plotData.xPlot,
+                    y: plotData.yPlot.map(y => Math.PI * y * y),
+                    mode: 'lines',
+                    name: 'Solid of Revolution',
+                    line: { color: 'rgba(0,100,80,0.2)' }
+                };
+
+                const data = [trace1, trace2];
+                const layout = {
+                    title: 'Function and Volume of Solid of Revolution',
+                    xaxis: { title: 'x' },
+                    yaxis: { title: 'y' }
+                };
+
+                Plotly.newPlot('plot', data, layout);
+
+            } catch (e) {
+                document.getElementById('result').innerText = 'Error: Invalid function or input';
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Volume of Solid of Revolution Calculator</h1>
+    <form onsubmit="calculateVolume(event)">
+        <label for="function">Function (in terms of x, e.g., Math.sin(x), Math.exp(x), x*x):</label><br>
+        <input type="text" id="function" name="function" required><br><br>
+
+        <label for="a-value">Starting x-value (a):</label><br>
+        <input type="number" id="a-value" name="a-value" step="any" required><br><br>
+
+        <label for="b-value">Ending x-value (b):</label><br>
+        <input type="number" id="b-value" name="b-value" step="any" required><br><br>
+
+        <input type="submit" value="Calculate Volume">
+    </form>
+    
+    <h2 id="result"></h2>
+    <div id="plot" style="width: 100%; height: 500px;"></div>
+</body>
+</html>
